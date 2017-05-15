@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTCommOperations xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="../Schemas/MTCommOperations_0.2.xsd">
+    <Header bufferSize="10" instanceId="1" creationTime="2017-01-18T12:00:00" sender="Ultimaker2" version="0.1" firstSequence="9" lastSequence="11" 
+	nextSequence="12"/>
+    <Operations>
+		<DeviceOperation uuid="P2673" name="X-Carve">
+			<Actions>
+				<Execution operationId="stop" name="stop" sequence="9" timestamp="2017-01-18T06:16:39">STOP</Execution>
+			</Actions>
+		</DeviceOperation>
+	</Operations>
+</MTCommOperations>
