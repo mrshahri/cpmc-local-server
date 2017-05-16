@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTCommOperations xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="../Schemas/MTCommOperations_0.2.xsd">
+    <Header bufferSize="10" instanceId="1" creationTime="2017-01-18T12:00:00" sender="Ultimaker2" version="0.1" firstSequence="9" lastSequence="11" 
+	nextSequence="12"/>
+    <Operations>
+		<Device name="Ultimaker2" uuid="P2673">
+			<ComponentOperation component="Linear" componentId="x" name="X">
+				<Actions>
+					<Position operationId="moveX" name="Move X Axis" sequence="9" timestamp="2017-01-18T06:16:39">100.0</Position>
+				</Actions>
+			</ComponentOperation>
+			<ComponentOperation component="Linear" componentId="y" name="Y">
+				<Actions>
+					<Position operationId="moveY" name="Move X Axis" sequence="11" timestamp="2017-01-18T06:16:39">-50.0</Position>
+				</Actions>
+			</ComponentOperation>
+			<ComponentOperation component="Sensor" componentId="extruder" name="Extruder">
+				<Actions>
+					<Temperature operationId="changeExtruderTemp" name="Change Extruder Temperature" sequence="10" timestamp="2017-01-18T06:16:39">210.0
+					</Temperature>
+				</Actions>
+			</ComponentOperation>
+		</Device>
+	</Operations>
+</MTCommOperations>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTCommOperations xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:noNamespaceSchemaLocation="Schemas/MTCommOperations_0.3.xsd">
+    <Header bufferSize="10" instanceId="1" creationTime="2017-01-18T12:00:00" sender="Ultimaker2" version="0.1" firstSequence="9" lastSequence="9" 
+	nextSequence="10"/>
+    <Operations>
+		<Device name="Ultimaker2" uuid="P2673">
+			<DeviceOperation  id="Ultimaker2" name="Ultimaker2 3D Printer">
+				<Jobs>
+					<Printing operationId="startJob" name="Start new job" sequence="9" timestamp="2017-01-18T05:45:40">
+						<Parameters>
+							<Material id="material" name="Material Type" timestamp="2017-01-18T05:45:40">PLA</Material>
+							<Quantity id="quantity" name="Number of objects" timestamp="2017-01-18T05:45:40">1</Quantity>
+							<Object id="objName" name="Object Name" timestamp="2017-01-18T05:45:40">Clip</Object>
+						</Parameters>
+					</Printing>
+				</Jobs>
+			</DeviceOperation>
+		</Device>
+    </Operations>
+</MTCommOperations>
