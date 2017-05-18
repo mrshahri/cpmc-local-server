@@ -1,5 +1,6 @@
 package com.cpmc.ls;
 
+import com.cpmc.ls.models.DeviceOperation;
 import nu.xom.*;
 
 import java.io.*;
@@ -16,13 +17,21 @@ public class App
     public static void main( String[] args )
     {
         try {
+
+            // generate XML for device operation
             HashMap<String, String> parameters = new HashMap<>();
             parameters.put("material", "PLA");
             parameters.put("targetExtTemp", "200");
             parameters.put("targetBedTemp", "30");
             parameters.put("quantity", "1");
             parameters.put("OBJnAME", "Clip");
-            generateDeviceOperationForJobs("Ultimaker01", "startJob", parameters);
+            DeviceOperation deviceOperation = new DeviceOperation();
+            deviceOperation.setDeviceId("Ultimaker01");
+            deviceOperation.setOperationId("startJob");
+            deviceOperation.setParameters(parameters);
+            generateDeviceOperationForJobs(deviceOperation);
+
+            // generate XML for component operation
 //            generateComponentOperationForActions();
         } catch (ParsingException e) {
             e.printStackTrace();
@@ -34,7 +43,7 @@ public class App
     /**
      * generate XML for deviceoperation for jobs
      */
-    private static void generateDeviceOperationForJobs(String deviceId, String operationId, HashMap<String, String> params) throws ParsingException, IOException {
+    private static void generateDeviceOperationForJobs(DeviceOperation deviceOperation) throws ParsingException, IOException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
         // get the empty operation XML as root
@@ -79,24 +88,27 @@ public class App
         // get operation by XPATH
         XPathContext context = new XPathContext("xmlns", "urn:mtconnect.org:MTConnectDevices:1.2");
         Nodes deviceOperations = probeDoc.query("/xmlns:MTConnectDevices/xmlns:Devices/xmlns:Device[@id=\""
-                        + deviceId + "\"]/xmlns:Operations//xmlns:Operation[@id=\"" + operationId + "\"]",
+                        + deviceOperation.getDeviceId() + "\"]/xmlns:Operations//xmlns:Operation[@id=\""
+                        + deviceOperation.getOperationId() + "\"]",
                 context);
-        Element deviceOperation = (Element) deviceOperations.get(0);
+        Element deviceOperationElement = (Element) deviceOperations.get(0);
 
         // Find the type of operation to create XML element
-        String deviceOperationType = deviceOperation.getAttributeValue("type");
+        String deviceOperationType = deviceOperationElement.getAttributeValue("type");
         String tagName = getParameterName(deviceOperationType);
         Element jobElement = new Element(tagName);
-        jobElement.addAttribute(new Attribute("operationId", operationId));
-        jobElement.addAttribute(new Attribute("name", deviceOperation.getAttributeValue("name")));
+        jobElement.addAttribute(new Attribute("operationId", deviceOperation.getOperationId()));
+        jobElement.addAttribute(new Attribute("name", deviceOperationElement.getAttributeValue("name")));
         jobElement.addAttribute(new Attribute("sequence", "1"));
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         jobElement.addAttribute(new Attribute("timestamp", sdf.format(new Date())));
 
         // create all parameters
-        Nodes probeJobParamters = deviceOperation.query("/xmlns:MTConnectDevices/xmlns:Devices/xmlns:Device[@id=\""
-                + deviceId + "\"]/xmlns:Operations/xmlns:Operation[@id=\"" + operationId + "\"]/xmlns:Parameters//xmlns:Parameter",
-                context);
+        Nodes probeJobParamters = deviceOperationElement.query("/xmlns:MTConnectDevices" +
+                "/xmlns:Devices/xmlns:Device[@id=\""
+                + deviceOperation.getDeviceId() + "\"]/xmlns:Operations/xmlns:Operation[@id=\""
+                + deviceOperation.getOperationId()
+                + "\"]/xmlns:Parameters//xmlns:Parameter", context);
         Element parameters = new Element("Parameters");
         for (int i=0; i<probeJobParamters.size(); i++) {
             Element probeJobParameter = (Element) probeJobParamters.get(i);
@@ -105,7 +117,7 @@ public class App
             parameter.addAttribute(new Attribute("id", probeJobParameter.getAttributeValue("id")));
             parameter.addAttribute(new Attribute("name", probeJobParameter.getAttributeValue("name")));
             parameter.addAttribute(new Attribute("timestamp", sdf.format(new Date())));
-            parameter.appendChild(params.get(probeJobParameter.getAttributeValue("id")));
+            parameter.appendChild(deviceOperation.getParameters().get(probeJobParameter.getAttributeValue("id")));
             parameters.appendChild(parameter);
         }
         jobElement.appendChild(parameters);
