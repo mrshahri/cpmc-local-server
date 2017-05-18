@@ -1,52 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<MTConnectDevices xmlns="urn:mtconnect.org:MTConnectDevices:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.2 ../Schemas/MTConnectDevices_1.2.xsd">
-    <Header bufferSize="10" instanceId="1" creationTime="2016-06-14T12:00:00" sender="Ultimaker2" version="1.2" assetCount="0" assetBufferSize="10"/>
+<MTConnectDevices xmlns="urn:mtconnect.org:MTConnectDevices:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.2 ../MTConnectDevices_1.2.xsd">
+    <Header bufferSize="10" instanceId="1" creationTime="2016-06-14T12:00:00" sender="Ultimaker2" version="1.2"
+            assetCount="0" assetBufferSize="10"/>
     <Devices>
         <Device id="Ultimaker01" uuid="P2673" name="Ultimaker2 3D Printer" type="3D printer" buildType="Square">
             <DataItems>
                 <DataItem category="EVENT" id="availability" name="availablility" type="AVAILABILITY"/>
-				<DataItem category="EVENT" id="startJobStatus" name="Start new job Status" type="PRINTING" />
-				<DataItem category="EVENT" id="stopJobStatus" name="Stop current job Status" type="PRINTING" />
+                <DataItem category="EVENT" id="startJobStatus" name="Start new job Status" type="PRINTING"/>
+                <DataItem category="EVENT" id="stopJobStatus" name="Stop current job Status" type="PRINTING"/>
             </DataItems>
             <Operations>
                 <Operation id="startJob" category="JOB" name="Start new job" type="PRINTING">
                     <Parameters>
                         <Parameter id="material" name="Material type" supportedMaterial="PLA" type="MATERIAL"/>
-                        <Parameter id="targetExtTemp" name="Target Extruder Temp" maxValue="210" minValue="0" units="CELSIUS" type="TEMPERATURE"/>
-                        <Parameter id="targetBedTemp" name="Target Bed Temp" maxValue="60" minValue="0" units="CELSIUS" type="TEMPERATURE"/>
-                        <Parameter id="fileName" name="Model File Name" type="FILE"/>
+                        <Parameter id="targetExtTemp" name="Target Extruder Temp" maxValue="210" minValue="0"
+                                   units="CELSIUS" type="TEMPERATURE"/>
+                        <Parameter id="targetBedTemp" name="Target Bed Temp" maxValue="60" minValue="0" units="CELSIUS"
+                                   type="TEMPERATURE"/>
+                        <Parameter id="quantity" name="Number of objects" type="QUANTITY"/>
+                        <Parameter id="OBJnAME" name="Object Name" type="OBJECT"/>
                     </Parameters>
                 </Operation>
-                <Operation id="stopJob" category="ACTION" name="Stop current job" type="PRINTING" />
+                <Operation id="stopJob" category="ACTION" name="Stop current job" type="PRINTING"/>
             </Operations>
             <Components>
                 <Axes id="axes" name="Axes">
                     <Components>
                         <Linear id="x" name="X">
                             <DataItems>
-                                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="xPos" name="Actual X Position" subType="ACTUAL" type="POSITION"/>
-								<DataItem category="EVENT" id="moveXStatus" name="Move X Axis Status" type="POSITION" />
+                                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="xPos"
+                                          name="Actual X Position" subType="ACTUAL" type="POSITION"/>
+                                <DataItem category="EVENT" id="moveXStatus" name="Move X Axis Status" type="POSITION"/>
                             </DataItems>
                             <Operations>
-                                <Operation  id="moveX" category="ACTION" coordinateSystem="MACHINE" name="Move X Axis" type="POSITION" units="MILLIMETER" minValue="-200" maxValue="200"/>
+                                <Operation id="moveX" category="ACTION" coordinateSystem="MACHINE" name="Move X Axis"
+                                           type="POSITION" units="MILLIMETER" minValue="-200" maxValue="200"/>
                             </Operations>
                         </Linear>
                         <Linear id="y" name="Y">
                             <DataItems>
-                                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="yPos" name="Actual Y Position" subType="ACTUAL" type="POSITION"/>
-								<DataItem category="EVENT" id="moveYStatus" name="Move Y Axis Status" type="POSITION" />
+                                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="yPos"
+                                          name="Actual Y Position" subType="ACTUAL" type="POSITION"/>
+                                <DataItem category="EVENT" id="moveYStatus" name="Move Y Axis Status" type="POSITION"/>
                             </DataItems>
                             <Operations>
-                                <Operation  id="moveY" category="ACTION" coordinateSystem="MACHINE" name="Move Y Axis" type="POSITION" units="MILLIMETER" minValue="-200" maxValue="200"/>
+                                <Operation id="moveY" category="ACTION" coordinateSystem="MACHINE" name="Move Y Axis"
+                                           type="POSITION" units="MILLIMETER" minValue="-200" maxValue="200"/>
                             </Operations>
                         </Linear>
                         <Linear id="z" name="Z">
                             <DataItems>
-                                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="zPos" name="Actual Z Position" subType="ACTUAL" type="POSITION"/>
-								<DataItem category="EVENT" id="moveZStatus" name="Move Z Axis Status" type="POSITION" />
+                                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="zPos"
+                                          name="Actual Z Position" subType="ACTUAL" type="POSITION"/>
+                                <DataItem category="EVENT" id="moveZStatus" name="Move Z Axis Status" type="POSITION"/>
                             </DataItems>
                             <Operations>
-                                <Operation  id="moveZ" category="ACTION" coordinateSystem="MACHINE" name="Move Z Axis" type="POSITION" units="MILLIMETER" minValue="-250" maxValue="250"/>
+                                <Operation id="moveZ" category="ACTION" coordinateSystem="MACHINE" name="Move Z Axis"
+                                           type="POSITION" units="MILLIMETER" minValue="-250" maxValue="250"/>
                             </Operations>
                         </Linear>
                     </Components>
@@ -55,40 +66,46 @@
                     <DataItems>
                         <DataItem category="SAMPLE" id="extruderTemp" name="Extruder Temp Sensor" type="TEMPERATURE"/>
                         <DataItem category="EVENT" id="extruderReady" name="Extruder Ready State" type="EXECUTION"/>
-						<DataItem category="EVENT" id="changeExtruderTempStatus" name="Change Extruder Temperature Status" type="TEMPERATURE" />
+                        <DataItem category="EVENT" id="changeExtruderTempStatus"
+                                  name="Change Extruder Temperature Status" type="TEMPERATURE"/>
                     </DataItems>
                     <Operations>
-                        <Operation  id="changeExtruderTemp" category="ACTION" name="Change Extruder Temperature" type="TEMPERATURE" units="CELSIUS" minValue="0" maxValue="220" />
+                        <Operation id="changeExtruderTemp" category="ACTION" name="Change Extruder Temperature"
+                                   type="TEMPERATURE" units="CELSIUS" minValue="0" maxValue="220"/>
                     </Operations>
                 </Sensor>
                 <Sensor id="bed" name="Bed">
                     <DataItems>
                         <DataItem category="SAMPLE" id="bedTemp" name="Bed Temp Sensor" type="TEMPERATURE"/>
                         <DataItem category="EVENT" id="bedReady" name="Bed Ready State" type="EXECUTION"/>
-						<DataItem category="EVENT" id="changeBedTempStatus" name="Change Extruder Temperature Status" type="TEMPERATURE" />
+                        <DataItem category="EVENT" id="changeBedTempStatus" name="Change Extruder Temperature Status"
+                                  type="TEMPERATURE"/>
                     </DataItems>
                     <Operations>
-                        <Operation  id="changeBedTemp" category="ACTION" name="Change Bed Temperature" type="TEMPERATURE" units="CELSIUS" minValue="0" maxValue="70" />
+                        <Operation id="changeBedTemp" category="ACTION" name="Change Bed Temperature" type="TEMPERATURE"
+                                   units="CELSIUS" minValue="0" maxValue="70"/>
                     </Operations>
                 </Sensor>
-		<Controller id="controller" name="Controller">
-                	<DataItems>
-                		<DataItem type="EXECUTION" id="buildProgress" category="EVENT" name="Build Progress State"></DataItem>
-						<DataItem category="EVENT" id="turnOffStatus"  name="Turn machine off Status" type="POWER"></DataItem>
-					</DataItems>
-					<Operations>
-						<Operation id="turnOff" category="ACTION" name="Turn machine off" type="POWER" />
-					</Operations>
+                <Controller id="controller" name="Controller">
+                    <DataItems>
+                        <DataItem type="EXECUTION" id="buildProgress" category="EVENT"
+                                  name="Build Progress State"></DataItem>
+                        <DataItem category="EVENT" id="turnOffStatus" name="Turn machine off Status"
+                                  type="POWER"></DataItem>
+                    </DataItems>
+                    <Operations>
+                        <Operation id="turnOff" category="ACTION" name="Turn machine off" type="POWER"/>
+                    </Operations>
                 </Controller>
                 <Systems id="systems" name="systems">
-			<Components>
-				<Electric id="el" name="electric">
-					<DataItems>
-						<DataItem category="EVENT" id="p2" name="power" type="POWER_STATE"/>
-					</DataItems>
-				</Electric>
-			</Components>
-		</Systems>
+                    <Components>
+                        <Electric id="el" name="electric">
+                            <DataItems>
+                                <DataItem category="EVENT" id="p2" name="power" type="POWER_STATE"/>
+                            </DataItems>
+                        </Electric>
+                    </Components>
+                </Systems>
             </Components>
         </Device>
     </Devices>

@@ -3,6 +3,9 @@ package com.cpmc.ls;
 import nu.xom.*;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
 
 /**
  * Hello world!
@@ -13,8 +16,14 @@ public class App
     public static void main( String[] args )
     {
         try {
-            generateDeviceOperationForJobs();
-            generateComponentOperationForActions();
+            HashMap<String, String> parameters = new HashMap<>();
+            parameters.put("material", "PLA");
+            parameters.put("targetExtTemp", "200");
+            parameters.put("targetBedTemp", "30");
+            parameters.put("quantity", "1");
+            parameters.put("OBJnAME", "Clip");
+            generateDeviceOperationForJobs("Ultimaker01", "startJob", parameters);
+//            generateComponentOperationForActions();
         } catch (ParsingException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -25,14 +34,19 @@ public class App
     /**
      * generate XML for deviceoperation for jobs
      */
-    private static void generateDeviceOperationForJobs() throws ParsingException, IOException {
+    private static void generateDeviceOperationForJobs(String deviceId, String operationId, HashMap<String, String> params) throws ParsingException, IOException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
         // get the empty operation XML as root
         Builder parser = new Builder();
-        InputStream is = classloader.getResourceAsStream("Operations.xml");
-        Document doc = parser.build(is);
-        is.close();
+
+        InputStream operationsXmlStream = classloader.getResourceAsStream("Operations.xml");
+        Document operationDoc = parser.build(operationsXmlStream);
+        operationsXmlStream.close();
+
+        InputStream probeXmlStream = classloader.getResourceAsStream("printer_Config.xml");
+        Document probeDoc = parser.build(probeXmlStream);
+        probeXmlStream.close();
 
         // construct Operations element
         Element opElement = new Element("Operations");
@@ -47,7 +61,7 @@ public class App
         headerElement.addAttribute(new Attribute("firstSequence", "9"));
         headerElement.addAttribute(new Attribute("lastSequence", "9"));
         headerElement.addAttribute(new Attribute("nextSequence", "10"));
-        doc.getRootElement().appendChild(headerElement);
+        operationDoc.getRootElement().appendChild(headerElement);
 
         // construct Device element
         Element deviceElement = new Element("Device");
@@ -62,48 +76,48 @@ public class App
         // construct Jobs element
         Element jobsElement = new Element("Jobs");
 
-        // create a Printing Job element
-        Element printJobElement = new Element("Printing");
-        printJobElement.addAttribute(new Attribute("operationId", "startJob"));
-        printJobElement.addAttribute(new Attribute("name", "Start new job"));
-        printJobElement.addAttribute(new Attribute("sequence", "9"));
-        printJobElement.addAttribute(new Attribute("timestamp", "2017-01-18T05:45:40"));
+        // get operation by XPATH
+        XPathContext context = new XPathContext("xmlns", "urn:mtconnect.org:MTConnectDevices:1.2");
+        Nodes deviceOperations = probeDoc.query("/xmlns:MTConnectDevices/xmlns:Devices/xmlns:Device[@id=\""
+                        + deviceId + "\"]/xmlns:Operations//xmlns:Operation[@id=\"" + operationId + "\"]",
+                context);
+        Element deviceOperation = (Element) deviceOperations.get(0);
 
-        // construct parameters element
-        Element parametersElement = new Element("Parameters");
+        // Find the type of operation to create XML element
+        String deviceOperationType = deviceOperation.getAttributeValue("type");
+        String tagName = getParameterName(deviceOperationType);
+        Element jobElement = new Element(tagName);
+        jobElement.addAttribute(new Attribute("operationId", operationId));
+        jobElement.addAttribute(new Attribute("name", deviceOperation.getAttributeValue("name")));
+        jobElement.addAttribute(new Attribute("sequence", "1"));
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        jobElement.addAttribute(new Attribute("timestamp", sdf.format(new Date())));
 
-        // create parameter elements
-        Element p1Element = new Element("Material");
-        p1Element.addAttribute(new Attribute("id", "material"));
-        p1Element.addAttribute(new Attribute("name", "Material Type"));
-        p1Element.addAttribute(new Attribute("timestamp", "2017-01-18T05:45:40"));
-        p1Element.appendChild("PLA");
-
-        Element p2Element = new Element("Quantity");
-        p2Element.addAttribute(new Attribute("id", "quantity"));
-        p2Element.addAttribute(new Attribute("name", "Number of objects"));
-        p2Element.addAttribute(new Attribute("timestamp", "2017-01-18T05:45:40"));
-        p2Element.appendChild("1");
-
-        Element p3Element = new Element("Object");
-        p3Element.addAttribute(new Attribute("id", "objName"));
-        p3Element.addAttribute(new Attribute("name", "Object Name"));
-        p3Element.addAttribute(new Attribute("timestamp", "2017-01-18T05:45:40"));
-        p3Element.appendChild("Clip");
-
-        // append child and grand child to operations
-        parametersElement.appendChild(p1Element);
-        parametersElement.appendChild(p2Element);
-        parametersElement.appendChild(p3Element);
-        printJobElement.appendChild(parametersElement);
-        jobsElement.appendChild(printJobElement);
+        // create all parameters
+        Nodes probeJobParamters = deviceOperation.query("/xmlns:MTConnectDevices/xmlns:Devices/xmlns:Device[@id=\""
+                + deviceId + "\"]/xmlns:Operations/xmlns:Operation[@id=\"" + operationId + "\"]/xmlns:Parameters//xmlns:Parameter",
+                context);
+        Element parameters = new Element("Parameters");
+        for (int i=0; i<probeJobParamters.size(); i++) {
+            Element probeJobParameter = (Element) probeJobParamters.get(i);
+            String parameterName = getParameterName(probeJobParameter.getAttributeValue("type"));
+            Element parameter = new Element(parameterName);
+            parameter.addAttribute(new Attribute("id", probeJobParameter.getAttributeValue("id")));
+            parameter.addAttribute(new Attribute("name", probeJobParameter.getAttributeValue("name")));
+            parameter.addAttribute(new Attribute("timestamp", sdf.format(new Date())));
+            parameter.appendChild(params.get(probeJobParameter.getAttributeValue("id")));
+            parameters.appendChild(parameter);
+        }
+        jobElement.appendChild(parameters);
+        jobsElement.appendChild(jobElement);
         devOpElement.appendChild(jobsElement);
         deviceElement.appendChild(devOpElement);
         opElement.appendChild(deviceElement);
-        // add child elements to root
-        doc.getRootElement().appendChild(opElement);
 
-        prettyPrint(doc);
+        // add child elements to root
+        operationDoc.getRootElement().appendChild(opElement);
+
+        prettyPrint(operationDoc);
     }
 
     /**
@@ -184,5 +198,9 @@ public class App
         serializer.setIndent(4);
         serializer.write(document);
         System.out.println();
+    }
+
+    private static String getParameterName(String type) {
+        return Character.toUpperCase(type.charAt(0)) + type.substring(1);
     }
 }
