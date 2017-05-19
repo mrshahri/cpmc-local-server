@@ -4,13 +4,17 @@ import com.cpmc.ls.models.ComponentOperation;
 import com.cpmc.ls.models.DeviceOperation;
 import com.cpmc.ls.models.Operation;
 import nu.xom.*;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Hello world!
@@ -18,26 +22,35 @@ import java.util.List;
  */
 public class App 
 {
+    private static final String ultimakerUrl = "http://10.5.55.116:10090";
+
     public static void main( String[] args )
     {
         try {
 
-            // generate XML for device operation
 /*
+            // generate XML for device operation - print
             HashMap<String, String> parameters = new HashMap<>();
             parameters.put("material", "PLA");
-            parameters.put("targetExtTemp", "200");
-            parameters.put("targetBedTemp", "30");
             parameters.put("quantity", "1");
-            parameters.put("OBJnAME", "Clip");
+            parameters.put("objName", "Clip");
             DeviceOperation deviceOperation = new DeviceOperation();
             deviceOperation.setDeviceId("Ultimaker01");
             deviceOperation.setOperationId("startJob");
             deviceOperation.setParameters(parameters);
-            generateDeviceOperationForJobs(deviceOperation);
+            String operationXML = generateDeviceOperationForJobs(deviceOperation);
 */
 
-            // generate XML for component operation
+            // code for device operation - stop
+            HashMap<String, String> parameters = new HashMap<>();
+            DeviceOperation deviceOperation = new DeviceOperation();
+            deviceOperation.setDeviceId("Ultimaker01");
+            deviceOperation.setOperationId("stopJob");
+            deviceOperation.setParameters(parameters);
+            String operationXML = generateDeviceOperationForJobs(deviceOperation);
+
+/*
+            // code for component operations -
             Operation operation = new Operation();
             operation.setDeviceId("Ultimaker01");
             operation.setUuid("P2673");
@@ -58,27 +71,33 @@ public class App
             co2.setComponentValue("-50.0");
             co2.setParameters(new HashMap<String, String>());
             componentOperations.add(co2);
-            ComponentOperation co3 = new ComponentOperation();
-            co3.setName("Z");
-            co3.setComponentId("extruder");
-            co3.setOperationId("changeExtruderTemp");
-            co3.setComponent("Sensor");
-            co3.setComponentValue("210.0");
-            co3.setParameters(new HashMap<String, String>());
-            componentOperations.add(co3);
             operation.setComponentOperations(componentOperations);
+            // generate operation XML
+            String operationXML = generateComponentOperationForActions(operation);
+            System.out.println(operationXML);
+*/
 
-            generateComponentOperationForActions(operation);
-
+            sendToMachine(operationXML, ultimakerUrl);
         } catch (ParsingException | IOException e) {
             e.printStackTrace();
         }
     }
 
+    private static void sendToMachine(String operationXML, String URL) throws IOException {
+
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost post = new HttpPost(URL);
+        post.setEntity(new StringEntity(operationXML));
+
+        HttpResponse response = client.execute(post);
+        System.out.println("Response Code : "
+                + response.getStatusLine().getStatusCode());
+    }
+
     /**
      * generate XML for deviceoperation for jobs
      */
-    private static void generateDeviceOperationForJobs(DeviceOperation deviceOperation) throws ParsingException, IOException {
+    private static String generateDeviceOperationForJobs(DeviceOperation deviceOperation) throws ParsingException, IOException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
         // get the empty operation XML as root
@@ -117,9 +136,6 @@ public class App
         devOpElement.addAttribute(new Attribute("id", "Ultimaker2"));
         devOpElement.addAttribute(new Attribute("name", "Ultimaker2 3D Printer"));
 
-        // construct Jobs element
-        Element jobsElement = new Element("Jobs");
-
         // get operation by XPATH
         XPathContext context = new XPathContext("xmlns", "urn:mtconnect.org:MTConnectDevices:1.2");
         Nodes deviceOperations = probeDoc.query("/xmlns:MTConnectDevices/xmlns:Devices/xmlns:Device[@id=\""
@@ -127,6 +143,13 @@ public class App
                         + deviceOperation.getOperationId() + "\"]",
                 context);
         Element deviceOperationElement = (Element) deviceOperations.get(0);
+
+        // construct Jobs element
+        String opOrAction = "Jobs";
+        if ("ACTION".equals(deviceOperationElement.getAttributeValue("category"))) {
+            opOrAction = "Actions";
+        }
+        Element jobsElement = new Element(opOrAction);
 
         // Find the type of operation to create XML element
         String deviceOperationType = deviceOperationElement.getAttributeValue("type");
@@ -138,24 +161,30 @@ public class App
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         jobElement.addAttribute(new Attribute("timestamp", sdf.format(new Date())));
 
-        // create all parameters
-        Nodes probeJobParamters = deviceOperationElement.query("/xmlns:MTConnectDevices" +
-                "/xmlns:Devices/xmlns:Device[@id=\""
-                + deviceOperation.getDeviceId() + "\"]/xmlns:Operations/xmlns:Operation[@id=\""
-                + deviceOperation.getOperationId()
-                + "\"]/xmlns:Parameters//xmlns:Parameter", context);
-        Element parameters = new Element("Parameters");
-        for (int i=0; i<probeJobParamters.size(); i++) {
-            Element probeJobParameter = (Element) probeJobParamters.get(i);
-            String parameterName = properCase(probeJobParameter.getAttributeValue("type"));
-            Element parameter = new Element(parameterName);
-            parameter.addAttribute(new Attribute("id", probeJobParameter.getAttributeValue("id")));
-            parameter.addAttribute(new Attribute("name", probeJobParameter.getAttributeValue("name")));
-            parameter.addAttribute(new Attribute("timestamp", sdf.format(new Date())));
-            parameter.appendChild(deviceOperation.getParameters().get(probeJobParameter.getAttributeValue("id")));
-            parameters.appendChild(parameter);
+        if ("Actions".equals(opOrAction)) {
+//            jobElement.appendChild(deviceOperation.getOperationId());
+            jobElement.appendChild("STOP");
+//            jobElement.appendChild("RESET");
+        } else {
+            // create all parameters
+            Nodes probeJobParamters = deviceOperationElement.query("/xmlns:MTConnectDevices" +
+                    "/xmlns:Devices/xmlns:Device[@id=\""
+                    + deviceOperation.getDeviceId() + "\"]/xmlns:Operations/xmlns:Operation[@id=\""
+                    + deviceOperation.getOperationId()
+                    + "\"]/xmlns:Parameters//xmlns:Parameter", context);
+            Element parameters = new Element("Parameters");
+            for (int i=0; i<probeJobParamters.size(); i++) {
+                Element probeJobParameter = (Element) probeJobParamters.get(i);
+                String parameterName = properCase(probeJobParameter.getAttributeValue("type"));
+                Element parameter = new Element(parameterName);
+                parameter.addAttribute(new Attribute("id", probeJobParameter.getAttributeValue("id")));
+                parameter.addAttribute(new Attribute("name", probeJobParameter.getAttributeValue("name")));
+                parameter.addAttribute(new Attribute("timestamp", sdf.format(new Date())));
+                parameter.appendChild(deviceOperation.getParameters().get(probeJobParameter.getAttributeValue("id")));
+                parameters.appendChild(parameter);
+            }
+            jobElement.appendChild(parameters);
         }
-        jobElement.appendChild(parameters);
         jobsElement.appendChild(jobElement);
         devOpElement.appendChild(jobsElement);
         deviceElement.appendChild(devOpElement);
@@ -165,6 +194,7 @@ public class App
         operationDoc.getRootElement().appendChild(opElement);
 
         prettyPrint(operationDoc);
+        return operationDoc.toXML();
     }
 
     /**
@@ -184,9 +214,10 @@ public class App
     /**
      * generate XML for component operation for actions
      */
-    private static void generateComponentOperationForActions(Operation operation)
+    private static String generateComponentOperationForActions(Operation operation)
             throws IOException, ParsingException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         // get the empty operation XML as root
         Builder parser = new Builder();
         InputStream is = classloader.getResourceAsStream("Operations.xml");
@@ -204,12 +235,12 @@ public class App
         Element headerElement = new Element("Header");
         headerElement.addAttribute(new Attribute("bufferSize", "10"));
         headerElement.addAttribute(new Attribute("instanceId", "1"));
-        headerElement.addAttribute(new Attribute("creationTime", "2017-01-18T12:00:00"));
+        headerElement.addAttribute(new Attribute("creationTime", sdf.format(new Date())));
         headerElement.addAttribute(new Attribute("sender", operation.getDeviceId()));
         headerElement.addAttribute(new Attribute("version", "0.1"));
-        headerElement.addAttribute(new Attribute("firstSequence", "9"));
-        headerElement.addAttribute(new Attribute("lastSequence", "9"));
-        headerElement.addAttribute(new Attribute("nextSequence", "10"));
+        headerElement.addAttribute(new Attribute("firstSequence", "1"));
+        headerElement.addAttribute(new Attribute("lastSequence", "1"));
+        headerElement.addAttribute(new Attribute("nextSequence", "2"));
         operationDoc.getRootElement().appendChild(headerElement);
 
         // construct Device element
@@ -218,7 +249,6 @@ public class App
         deviceElement.addAttribute(new Attribute("uuid", operation.getUuid()));
 
         XPathContext context = new XPathContext("xmlns", "urn:mtconnect.org:MTConnectDevices:1.2");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         int sequence = 0;
 
         for (ComponentOperation componentOperation : operation.getComponentOperations()) {
@@ -255,6 +285,7 @@ public class App
         operationDoc.getRootElement().appendChild(opElement);
 
         prettyPrint(operationDoc);
+        return operationDoc.toXML();
     }
 
     private static void prettyPrint(Document document) throws IOException {

@@ -11,6 +11,7 @@ public class DeviceOperation {
     private HashMap<String, String> parameters;
 
     public DeviceOperation() {
+        parameters = new HashMap<>();
     }
 
     public String getDeviceId() {

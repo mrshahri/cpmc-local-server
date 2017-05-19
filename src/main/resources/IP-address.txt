@@ -1,0 +1,3 @@
+3DP: POST http://10.5.55.116:10090
+CNC: POST http://10.5.55.116:1080
+Robotic Arm: POST http://10.5.55.107:1080
